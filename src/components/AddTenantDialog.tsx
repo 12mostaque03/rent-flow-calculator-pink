@@ -44,10 +44,10 @@ export const AddTenantDialog = ({ open, onClose, onAddTenant }: AddTenantDialogP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-800 border-pink-500/20 text-white max-w-md">
+      <DialogContent className="bg-gray-800 border-blue-500/20 text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            Add New <span className="text-pink-400">Tenant</span>
+            Add New <span className="text-blue-400">Tenant</span>
           </DialogTitle>
         </DialogHeader>
         
@@ -115,7 +115,7 @@ export const AddTenantDialog = ({ open, onClose, onAddTenant }: AddTenantDialogP
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
             >
               Add Tenant
             </Button>

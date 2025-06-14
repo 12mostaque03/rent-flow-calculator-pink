@@ -117,9 +117,9 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   };
 
   return (
-    <Card className="bg-gray-800/50 backdrop-blur-lg border-pink-500/20 p-6">
+    <Card className="bg-gray-800/50 backdrop-blur-lg border-blue-500/20 p-6">
       <h2 className="text-xl font-semibold text-white mb-6">
-        Calculate Rent for <span className="text-pink-400">{tenant.name}</span>
+        Calculate Rent for <span className="text-blue-400">{tenant.name}</span>
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -187,7 +187,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-lg p-4 mb-6 border border-pink-500/30">
+      <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-4 mb-6 border border-blue-500/30">
         <h3 className="text-lg font-semibold text-white mb-2">Rent Breakdown</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -203,15 +203,15 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
             <span className="text-white">₹{formData.additionalCharges || 0}</span>
           </div>
           <div className="border-t border-gray-600 pt-2 flex justify-between font-semibold">
-            <span className="text-pink-400">Total Rent:</span>
-            <span className="text-pink-400 text-lg">₹{totalRent.toFixed(2)}</span>
+            <span className="text-blue-400">Total Rent:</span>
+            <span className="text-blue-400 text-lg">₹{totalRent.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
       <Button
         onClick={handleSave}
-        className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700"
+        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
         disabled={!formData.month || !formData.currentReading}
       >
         Save Rent Entry
