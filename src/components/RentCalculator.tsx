@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   const [totalRent, setTotalRent] = useState(0);
   const [previousBalance, setPreviousBalance] = useState(0);
   const [advanceCredit, setAdvanceCredit] = useState(0);
+  const [carriedFromMonth, setCarriedFromMonth] = useState<string>(''); // Track which month the balance came from
 
   const getNextMonth = (currentMonth: string, currentYear: string) => {
     const monthIndex = months.indexOf(currentMonth);
@@ -61,9 +63,17 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         const lastEntry = tenantEntries[0];
         const nextMonth = getNextMonth(lastEntry.month, lastEntry.year.toString());
         
-        // Set previous balance and advance credit from the last entry
-        setPreviousBalance(lastEntry.balance || 0);
+        // Set previous balance and advance credit from the last entry, but only if balance hasn't been paid
+        const balanceToCarry = (lastEntry.balance && !lastEntry.isBalancePaid) ? lastEntry.balance : 0;
+        setPreviousBalance(balanceToCarry);
         setAdvanceCredit(lastEntry.advanceCredit || 0);
+        
+        // Track which month the balance came from
+        if (balanceToCarry > 0) {
+          setCarriedFromMonth(`${lastEntry.month} ${lastEntry.year}`);
+        } else {
+          setCarriedFromMonth('');
+        }
         
         setFormData(prev => ({
           ...prev,
@@ -149,9 +159,17 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
     const verifyEntries = localStorage.getItem('rentEntries');
     console.log('Verified saved entries:', verifyEntries ? JSON.parse(verifyEntries) : null);
 
+    let toastMessage = `Total rent for ${formData.month} ${formData.year}: ₹${finalAmountDue.toFixed(2)}`;
+    if (advanceCredit > 0) {
+      toastMessage += ` (₹${advanceCredit.toFixed(2)} advance credit applied)`;
+    }
+    if (previousBalance > 0) {
+      toastMessage += ` (₹${previousBalance.toFixed(2)} added from ${carriedFromMonth})`;
+    }
+
     toast({
       title: "Rent Saved Successfully",
-      description: `Total rent for ${formData.month} ${formData.year}: ₹${finalAmountDue.toFixed(2)}${advanceCredit > 0 ? ` (₹${advanceCredit.toFixed(2)} advance credit applied)` : ''}`,
+      description: toastMessage,
     });
 
     const nextMonth = getNextMonth(formData.month, formData.year);
@@ -164,6 +182,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
     });
     setPreviousBalance(0);
     setAdvanceCredit(0); // Reset for next entry
+    setCarriedFromMonth('');
 
     console.log('Form reset completed with next month:', nextMonth);
   };
@@ -180,7 +199,12 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       {previousBalance > 0 && (
         <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
           <h3 className="text-yellow-400 font-semibold mb-2">Previous Balance Due</h3>
-          <p className="text-white">₹{previousBalance.toFixed(2)} from previous month will be added to this month's rent.</p>
+          <p className="text-white">
+            ₹{previousBalance.toFixed(2)} from <span className="font-semibold text-yellow-300">{carriedFromMonth}</span> will be added to this month's rent.
+          </p>
+          <p className="text-yellow-200 text-sm mt-1">
+            This amount was carried forward because it wasn't fully paid in {carriedFromMonth}.
+          </p>
         </div>
       )}
 
@@ -261,7 +285,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         <div className="space-y-2 text-sm">
           {previousBalance > 0 && (
             <div className="flex justify-between">
-              <span className="text-gray-300">Previous Balance:</span>
+              <span className="text-gray-300">Previous Balance (from {carriedFromMonth}):</span>
               <span className="text-yellow-400">₹{previousBalance.toFixed(2)}</span>
             </div>
           )}
@@ -291,6 +315,11 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
             <span className="text-yellow-400">Final Amount Due:</span>
             <span className="text-yellow-400">₹{finalAmountDue.toFixed(2)}</span>
           </div>
+          {previousBalance > 0 && (
+            <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-700/50 rounded">
+              <strong>Note:</strong> ₹{previousBalance.toFixed(2)} was added from {carriedFromMonth} because the balance wasn't fully paid that month.
+            </div>
+          )}
         </div>
       </div>
 

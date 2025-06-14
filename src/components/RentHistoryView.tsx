@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Edit } from 'lucide-react';
+import { X, Edit, CheckCircle } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +26,8 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
   const [paymentDate, setPaymentDate] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
+  const [markingBalancePaid, setMarkingBalancePaid] = useState<RentEntry | null>(null);
+  const [balancePaidDate, setBalancePaidDate] = useState('');
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('rentEntries');
@@ -52,6 +54,38 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     setPaymentDate(entry.paymentDate || '');
     setPaymentNotes(entry.paymentNotes || '');
     setAmountPaid(entry.amountPaid?.toString() || '');
+  };
+
+  const handleMarkBalancePaid = (entry: RentEntry) => {
+    setMarkingBalancePaid(entry);
+    setBalancePaidDate('');
+  };
+
+  const handleSaveBalancePaid = () => {
+    if (!markingBalancePaid || !balancePaidDate) return;
+
+    const updatedEntry = {
+      ...markingBalancePaid,
+      isBalancePaid: true,
+      balancePaidDate: balancePaidDate,
+      paymentStatus: 'paid' as const,
+      balance: 0,
+    };
+
+    const updatedEntries = rentEntries.map(entry => 
+      entry.id === markingBalancePaid.id ? updatedEntry : entry
+    );
+
+    setRentEntries(updatedEntries);
+    localStorage.setItem('rentEntries', JSON.stringify(updatedEntries));
+    
+    setMarkingBalancePaid(null);
+    setBalancePaidDate('');
+
+    toast({
+      title: "Balance Marked as Paid",
+      description: `Remaining balance of ₹${markingBalancePaid.balance?.toFixed(2)} marked as paid on ${new Date(balancePaidDate).toLocaleDateString()}`,
+    });
   };
 
   const handleSavePaymentInfo = () => {
@@ -201,10 +235,20 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
+                        {entry.balance && entry.balance > 0 && !entry.isBalancePaid && (
+                          <Button
+                            onClick={() => handleMarkBalancePaid(entry)}
+                            size="sm"
+                            variant="outline"
+                            className="text-success border-success hover:bg-success/10"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Electricity Reading:</span>
                         <p className="text-foreground font-medium">
@@ -246,7 +290,10 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                       {entry.balance && entry.balance > 0 && (
                         <div>
                           <span className="text-muted-foreground">Outstanding Balance:</span>
-                          <p className="text-destructive font-medium">₹{entry.balance.toFixed(2)}</p>
+                          <p className={`font-medium ${entry.isBalancePaid ? 'text-success' : 'text-destructive'}`}>
+                            ₹{entry.balance.toFixed(2)}
+                            {entry.isBalancePaid && ' (Paid)'}
+                          </p>
                         </div>
                       )}
                       
@@ -255,6 +302,15 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                           <span className="text-muted-foreground">Payment Date:</span>
                           <p className="text-foreground font-medium">
                             {new Date(entry.paymentDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+
+                      {entry.balancePaidDate && (
+                        <div>
+                          <span className="text-muted-foreground">Balance Paid Date:</span>
+                          <p className="text-success font-medium">
+                            {new Date(entry.balancePaidDate).toLocaleDateString()}
                           </p>
                         </div>
                       )}
@@ -353,6 +409,60 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark Balance as Paid Dialog */}
+      <Dialog open={!!markingBalancePaid} onOpenChange={() => setMarkingBalancePaid(null)}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Mark Balance as Paid</DialogTitle>
+          </DialogHeader>
+          
+          {markingBalancePaid && (
+            <div className="space-y-4">
+              <div className="bg-muted/20 p-4 rounded-lg">
+                <p className="text-foreground mb-2">
+                  <strong>Tenant:</strong> {getTenantName(markingBalancePaid.tenantId)}
+                </p>
+                <p className="text-foreground mb-2">
+                  <strong>Month:</strong> {markingBalancePaid.month} {markingBalancePaid.year}
+                </p>
+                <p className="text-destructive text-lg font-bold">
+                  <strong>Outstanding Balance:</strong> ₹{markingBalancePaid.balance?.toFixed(2)}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="balance-paid-date" className="text-foreground">Date When Balance Was Paid</Label>
+                <Input
+                  id="balance-paid-date"
+                  type="date"
+                  value={balancePaidDate}
+                  onChange={(e) => setBalancePaidDate(e.target.value)}
+                  className="bg-input border-border text-foreground"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => setMarkingBalancePaid(null)}
+                  variant="outline"
+                  className="border-border text-foreground hover:bg-accent/20"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveBalancePaid}
+                  className="bg-success text-white hover:bg-success/90"
+                  disabled={!balancePaidDate}
+                >
+                  Mark as Paid
                 </Button>
               </div>
             </div>

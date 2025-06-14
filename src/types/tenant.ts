@@ -24,4 +24,6 @@ export interface RentEntry {
   balance?: number;
   previousBalance?: number;
   advanceCredit?: number; // Credit from overpayment to carry forward
+  balancePaidDate?: string; // Date when remaining balance was paid
+  isBalancePaid?: boolean; // Whether the remaining balance has been paid
 }
