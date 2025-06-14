@@ -1,10 +1,11 @@
-
 export interface Tenant {
   id: string;
   name: string;
   monthlyRent: number;
   electricityRate: number;
   initialElectricityReading: number;
+  agreementStartDate?: string; // Date when agreement started
+  agreementDuration?: number; // Duration in months (default 11)
 }
 
 export interface RentEntry {

@@ -5,6 +5,7 @@ import { AddTenantDialog } from '@/components/AddTenantDialog';
 import { TenantSelector } from '@/components/TenantSelector';
 import { RentCalculator } from '@/components/RentCalculator';
 import { RentHistoryView } from '@/components/RentHistoryView';
+import { AgreementReminder } from '@/components/AgreementReminder';
 import { Tenant, RentEntry } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
@@ -132,6 +133,9 @@ const Index = () => {
         </header>
 
         <div className="space-y-6">
+          {/* Agreement Reminders */}
+          <AgreementReminder tenants={tenants} />
+
           <TenantSelector 
             tenants={tenants} 
             selectedTenant={selectedTenant}
@@ -167,6 +171,7 @@ const Index = () => {
           open={showAddTenant}
           onClose={handleCloseAddTenantDialog}
           onAddTenant={editingTenant ? handleUpdateTenant : handleAddTenant}
+          editingTenant={editingTenant}
         />
 
         {showRentHistory && (
