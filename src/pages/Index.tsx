@@ -35,8 +35,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900">
-      <div className="container mx-auto p-4 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900 relative">
+      {/* Watermark */}
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
+        <p className="text-blue-400/10 text-8xl font-bold transform rotate-45 select-none">
+          MOSTAQUE
+        </p>
+      </div>
+
+      <div className="container mx-auto p-4 max-w-4xl relative z-10">
         <header className="text-center mb-8 pt-8">
           <h1 className="text-4xl font-bold text-white mb-2">
             Rent <span className="text-blue-400">Calculator</span>
@@ -58,7 +65,7 @@ const Index = () => {
 
         <Button
           onClick={() => setShowAddTenant(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 z-20"
           size="icon"
         >
           <Plus className="w-6 h-6" />
@@ -69,10 +76,6 @@ const Index = () => {
           onClose={() => setShowAddTenant(false)}
           onAddTenant={handleAddTenant}
         />
-
-        <footer className="text-center mt-12 pb-8">
-          <p className="text-blue-400 text-xl font-bold">MOSTAQUE</p>
-        </footer>
       </div>
     </div>
   );
