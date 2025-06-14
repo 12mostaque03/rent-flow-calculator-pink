@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,6 +27,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   });
 
   const [totalRent, setTotalRent] = useState(0);
+  const [previousBalance, setPreviousBalance] = useState(0);
 
   const getNextMonth = (currentMonth: string, currentYear: string) => {
     const monthIndex = months.indexOf(currentMonth);
@@ -46,7 +46,6 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
 
   useEffect(() => {
     console.log('Loading previous entries for tenant:', tenant.id);
-    // Load last entry for this tenant to get the previous reading
     const savedEntries = localStorage.getItem('rentEntries');
     if (savedEntries) {
       const entries: RentEntry[] = JSON.parse(savedEntries);
@@ -60,6 +59,9 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         console.log('Setting previous reading to:', tenantEntries[0].currentReading);
         const lastEntry = tenantEntries[0];
         const nextMonth = getNextMonth(lastEntry.month, lastEntry.year.toString());
+        
+        // Set previous balance from the last entry
+        setPreviousBalance(lastEntry.balance || 0);
         
         setFormData(prev => ({
           ...prev,
@@ -123,6 +125,8 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       currentReading: current,
       additionalCharges: parseFloat(formData.additionalCharges) || 0,
       totalRent,
+      previousBalance,
+      balance: totalRent + previousBalance, // Initial balance is total amount due
       createdAt: new Date().toISOString(),
     };
 
@@ -135,16 +139,14 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
     console.log('Saving entries to localStorage:', entries);
     localStorage.setItem('rentEntries', JSON.stringify(entries));
 
-    // Verify it was saved
     const verifyEntries = localStorage.getItem('rentEntries');
     console.log('Verified saved entries:', verifyEntries ? JSON.parse(verifyEntries) : null);
 
     toast({
       title: "Rent Saved Successfully",
-      description: `Total rent for ${formData.month} ${formData.year}: ₹${totalRent.toFixed(2)}`,
+      description: `Total rent for ${formData.month} ${formData.year}: ₹${totalRent.toFixed(2)}${previousBalance > 0 ? ` (includes previous balance: ₹${previousBalance.toFixed(2)})` : ''}`,
     });
 
-    // Auto-fill next month and reset other fields
     const nextMonth = getNextMonth(formData.month, formData.year);
     setFormData({
       month: nextMonth.month,
@@ -153,6 +155,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       currentReading: '',
       additionalCharges: '0',
     });
+    setPreviousBalance(0); // Reset for next entry
 
     console.log('Form reset completed with next month:', nextMonth);
   };
@@ -162,6 +165,13 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       <h2 className="text-xl font-semibold text-white mb-6">
         Calculate Rent for <span className="text-blue-400">{tenant.name}</span>
       </h2>
+
+      {previousBalance > 0 && (
+        <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
+          <h3 className="text-yellow-400 font-semibold mb-2">Previous Balance Due</h3>
+          <p className="text-white">₹{previousBalance.toFixed(2)} from previous month will be added to this month's rent.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
@@ -231,6 +241,12 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-4 mb-6 border border-blue-500/30">
         <h3 className="text-lg font-semibold text-white mb-2">Rent Breakdown</h3>
         <div className="space-y-2 text-sm">
+          {previousBalance > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-300">Previous Balance:</span>
+              <span className="text-yellow-400">₹{previousBalance.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-gray-300">Room Rent:</span>
             <span className="text-white">₹{tenant.monthlyRent}</span>
@@ -244,9 +260,15 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
             <span className="text-white">₹{formData.additionalCharges || 0}</span>
           </div>
           <div className="border-t border-gray-600 pt-2 flex justify-between font-semibold">
-            <span className="text-blue-400">Total Rent:</span>
+            <span className="text-blue-400">Total This Month:</span>
             <span className="text-blue-400 text-lg">₹{totalRent.toFixed(2)}</span>
           </div>
+          {previousBalance > 0 && (
+            <div className="flex justify-between font-bold text-lg">
+              <span className="text-yellow-400">Total Amount Due:</span>
+              <span className="text-yellow-400">₹{(totalRent + previousBalance).toFixed(2)}</span>
+            </div>
+          )}
         </div>
       </div>
 

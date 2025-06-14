@@ -17,7 +17,10 @@ export interface RentEntry {
   additionalCharges: number;
   totalRent: number;
   createdAt: string;
-  paymentStatus?: 'paid' | 'unpaid';
+  paymentStatus?: 'paid' | 'unpaid' | 'partial';
   paymentDate?: string;
   paymentNotes?: string;
+  amountPaid?: number;
+  balance?: number;
+  previousBalance?: number;
 }

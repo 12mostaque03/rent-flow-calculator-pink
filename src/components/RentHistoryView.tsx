@@ -22,9 +22,10 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
   const [rentEntries, setRentEntries] = useState<RentEntry[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('all');
   const [editingEntry, setEditingEntry] = useState<RentEntry | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid' | 'partial'>('unpaid');
   const [paymentDate, setPaymentDate] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [amountPaid, setAmountPaid] = useState('');
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('rentEntries');
@@ -61,16 +62,35 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     setPaymentStatus(entry.paymentStatus || 'unpaid');
     setPaymentDate(entry.paymentDate || '');
     setPaymentNotes(entry.paymentNotes || '');
+    setAmountPaid(entry.amountPaid?.toString() || '');
   };
 
   const handleSavePaymentInfo = () => {
     if (!editingEntry) return;
 
+    const paidAmount = parseFloat(amountPaid) || 0;
+    const totalWithBalance = editingEntry.totalRent + (editingEntry.previousBalance || 0);
+    let newPaymentStatus: 'paid' | 'unpaid' | 'partial' = 'unpaid';
+    let balance = 0;
+
+    if (paidAmount >= totalWithBalance) {
+      newPaymentStatus = 'paid';
+      balance = 0;
+    } else if (paidAmount > 0) {
+      newPaymentStatus = 'partial';
+      balance = totalWithBalance - paidAmount;
+    } else {
+      newPaymentStatus = 'unpaid';
+      balance = totalWithBalance;
+    }
+
     const updatedEntry = {
       ...editingEntry,
-      paymentStatus,
+      paymentStatus: newPaymentStatus,
       paymentDate: paymentDate || undefined,
       paymentNotes: paymentNotes || undefined,
+      amountPaid: paidAmount || undefined,
+      balance: balance || undefined,
     };
 
     const updatedEntries = rentEntries.map(entry => 
@@ -84,16 +104,17 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     setPaymentStatus('unpaid');
     setPaymentDate('');
     setPaymentNotes('');
+    setAmountPaid('');
 
     toast({
       title: "Payment Info Updated",
-      description: "Payment information has been updated successfully",
+      description: `Payment information updated. ${balance > 0 ? `Balance: ₹${balance.toFixed(2)}` : 'Fully paid'}`,
     });
   };
 
   const handleEditLatestEntry = () => {
     if (selectedTenantId !== 'all' && filteredEntries.length > 0) {
-      const latestEntry = filteredEntries[0]; // Get the most recent entry for this tenant
+      const latestEntry = filteredEntries[0];
       handleEditEntry(latestEntry);
     }
   };
@@ -162,7 +183,10 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                   <TableHead className="text-muted-foreground">Previous Reading</TableHead>
                   <TableHead className="text-muted-foreground">Current Reading</TableHead>
                   <TableHead className="text-muted-foreground">Additional Charges</TableHead>
+                  <TableHead className="text-muted-foreground">Previous Balance</TableHead>
                   <TableHead className="text-muted-foreground">Total Rent</TableHead>
+                  <TableHead className="text-muted-foreground">Amount Paid</TableHead>
+                  <TableHead className="text-muted-foreground">Balance</TableHead>
                   <TableHead className="text-muted-foreground">Payment Status</TableHead>
                   <TableHead className="text-muted-foreground">Payment Date</TableHead>
                   <TableHead className="text-muted-foreground">Payment Notes</TableHead>
@@ -184,11 +208,22 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                     <TableCell className="text-muted-foreground">{entry.previousReading}</TableCell>
                     <TableCell className="text-muted-foreground">{entry.currentReading}</TableCell>
                     <TableCell className="text-muted-foreground">₹{entry.additionalCharges}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {entry.previousBalance ? `₹${entry.previousBalance.toFixed(2)}` : '-'}
+                    </TableCell>
                     <TableCell className="text-accent font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {entry.amountPaid ? `₹${entry.amountPaid.toFixed(2)}` : '-'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {entry.balance ? `₹${entry.balance.toFixed(2)}` : '-'}
+                    </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded text-xs ${
                         entry.paymentStatus === 'paid' 
                           ? 'bg-success/20 text-success' 
+                          : entry.paymentStatus === 'partial'
+                          ? 'bg-yellow-500/20 text-yellow-400'
                           : 'bg-destructive/20 text-destructive'
                       }`}>
                         {entry.paymentStatus || 'Unpaid'}
@@ -240,47 +275,48 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                 <div>
                   <strong>Total Rent:</strong> ₹{editingEntry.totalRent.toFixed(2)}
                 </div>
+                <div>
+                  <strong>Previous Balance:</strong> ₹{(editingEntry.previousBalance || 0).toFixed(2)}
+                </div>
+                <div className="col-span-2">
+                  <strong>Total Amount Due:</strong> ₹{(editingEntry.totalRent + (editingEntry.previousBalance || 0)).toFixed(2)}
+                </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="payment-status" className="text-foreground">Payment Status</Label>
-                  <Select value={paymentStatus} onValueChange={(value: 'paid' | 'unpaid') => setPaymentStatus(value)}>
-                    <SelectTrigger className="bg-input border-border text-foreground">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      <SelectItem value="unpaid" className="text-foreground hover:bg-accent/20">Unpaid</SelectItem>
-                      <SelectItem value="paid" className="text-foreground hover:bg-accent/20">Paid</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="amount-paid" className="text-foreground">Amount Paid (₹)</Label>
+                  <Input
+                    id="amount-paid"
+                    type="number"
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
+                    placeholder="Enter amount paid"
+                    className="bg-input border-border text-foreground"
+                  />
                 </div>
 
-                {paymentStatus === 'paid' && (
-                  <>
-                    <div>
-                      <Label htmlFor="payment-date" className="text-foreground">Payment Date</Label>
-                      <Input
-                        id="payment-date"
-                        type="date"
-                        value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
-                        className="bg-input border-border text-foreground"
-                      />
-                    </div>
+                <div>
+                  <Label htmlFor="payment-date" className="text-foreground">Payment Date</Label>
+                  <Input
+                    id="payment-date"
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="bg-input border-border text-foreground"
+                  />
+                </div>
 
-                    <div>
-                      <Label htmlFor="payment-notes" className="text-foreground">Payment Notes (Optional)</Label>
-                      <Textarea
-                        id="payment-notes"
-                        value={paymentNotes}
-                        onChange={(e) => setPaymentNotes(e.target.value)}
-                        placeholder="Enter any notes about the payment..."
-                        className="bg-input border-border text-foreground"
-                      />
-                    </div>
-                  </>
-                )}
+                <div>
+                  <Label htmlFor="payment-notes" className="text-foreground">Payment Notes (Optional)</Label>
+                  <Textarea
+                    id="payment-notes"
+                    value={paymentNotes}
+                    onChange={(e) => setPaymentNotes(e.target.value)}
+                    placeholder="Enter any notes about the payment..."
+                    className="bg-input border-border text-foreground"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2">
