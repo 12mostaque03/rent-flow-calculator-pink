@@ -15,6 +15,7 @@ const Index = () => {
   const [showRentHistory, setShowRentHistory] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
 
   useEffect(() => {
     loadTenants();
@@ -36,6 +37,38 @@ const Index = () => {
     setTenants(updatedTenants);
     localStorage.setItem('tenants', JSON.stringify(updatedTenants));
     setShowAddTenant(false);
+  };
+
+  const handleEditTenant = (tenant: Tenant) => {
+    setEditingTenant(tenant);
+    setShowAddTenant(true);
+  };
+
+  const handleUpdateTenant = (updatedTenantData: Omit<Tenant, 'id'>) => {
+    if (editingTenant) {
+      const updatedTenant: Tenant = {
+        ...updatedTenantData,
+        id: editingTenant.id,
+      };
+      const updatedTenants = tenants.map(t => 
+        t.id === editingTenant.id ? updatedTenant : t
+      );
+      setTenants(updatedTenants);
+      localStorage.setItem('tenants', JSON.stringify(updatedTenants));
+      
+      // Update selected tenant if it was the one being edited
+      if (selectedTenant?.id === editingTenant.id) {
+        setSelectedTenant(updatedTenant);
+      }
+      
+      setEditingTenant(null);
+      setShowAddTenant(false);
+      
+      toast({
+        title: "Tenant Updated",
+        description: `${updatedTenant.name} has been updated successfully`,
+      });
+    }
   };
 
   const handleDeleteTenant = (tenantId: string) => {
@@ -60,6 +93,11 @@ const Index = () => {
       title: "Tenant Deleted",
       description: "Tenant and all associated rent entries have been removed",
     });
+  };
+
+  const handleCloseAddTenantDialog = () => {
+    setShowAddTenant(false);
+    setEditingTenant(null);
   };
 
   return (
@@ -90,6 +128,7 @@ const Index = () => {
             selectedTenant={selectedTenant}
             onSelectTenant={setSelectedTenant}
             onDeleteTenant={handleDeleteTenant}
+            onEditTenant={handleEditTenant}
           />
 
           {selectedTenant && (
@@ -117,8 +156,9 @@ const Index = () => {
 
         <AddTenantDialog
           open={showAddTenant}
-          onClose={() => setShowAddTenant(false)}
-          onAddTenant={handleAddTenant}
+          onClose={handleCloseAddTenantDialog}
+          onAddTenant={editingTenant ? handleUpdateTenant : handleAddTenant}
+          editingTenant={editingTenant}
         />
 
         {showRentHistory && (
