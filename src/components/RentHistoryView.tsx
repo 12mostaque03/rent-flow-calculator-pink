@@ -4,6 +4,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { X, Trash2, Edit } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +22,10 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
   const { toast } = useToast();
   const [rentEntries, setRentEntries] = useState<RentEntry[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('all');
+  const [editingEntry, setEditingEntry] = useState<RentEntry | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
+  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('rentEntries');
@@ -50,9 +58,38 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
   };
 
   const handleEditEntry = (entry: RentEntry) => {
-    if (onEditRentEntry) {
-      onEditRentEntry(entry);
-    }
+    setEditingEntry(entry);
+    setPaymentStatus(entry.paymentStatus || 'unpaid');
+    setPaymentDate(entry.paymentDate || '');
+    setPaymentNotes(entry.paymentNotes || '');
+  };
+
+  const handleSavePaymentInfo = () => {
+    if (!editingEntry) return;
+
+    const updatedEntry = {
+      ...editingEntry,
+      paymentStatus,
+      paymentDate: paymentDate || undefined,
+      paymentNotes: paymentNotes || undefined,
+    };
+
+    const updatedEntries = rentEntries.map(entry => 
+      entry.id === editingEntry.id ? updatedEntry : entry
+    );
+
+    setRentEntries(updatedEntries);
+    localStorage.setItem('rentEntries', JSON.stringify(updatedEntries));
+    
+    setEditingEntry(null);
+    setPaymentStatus('unpaid');
+    setPaymentDate('');
+    setPaymentNotes('');
+
+    toast({
+      title: "Payment Info Updated",
+      description: "Payment information has been updated successfully",
+    });
   };
 
   const handleEditSelectedTenantEntries = () => {
@@ -95,18 +132,6 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                 ))}
               </SelectContent>
             </Select>
-            
-            {selectedTenantId !== 'all' && filteredEntries.length > 0 && (
-              <Button
-                onClick={handleEditSelectedTenantEntries}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Latest Entry
-              </Button>
-            )}
           </div>
           
           {filteredEntries.length === 0 ? (
@@ -171,14 +196,24 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                       {new Date(entry.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        onClick={() => handleDeleteEntry(entry.id)}
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive/90"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          onClick={() => handleEditEntry(entry)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-primary hover:text-primary/90"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteEntry(entry.id)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive/90"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -187,6 +222,88 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
           )}
         </CardContent>
       </Card>
+
+      {/* Payment Edit Dialog */}
+      <Dialog open={!!editingEntry} onOpenChange={() => setEditingEntry(null)}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Edit Payment Information</DialogTitle>
+          </DialogHeader>
+          
+          {editingEntry && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                <div>
+                  <strong>Tenant:</strong> {getTenantName(editingEntry.tenantId)}
+                </div>
+                <div>
+                  <strong>Month:</strong> {editingEntry.month} {editingEntry.year}
+                </div>
+                <div>
+                  <strong>Total Rent:</strong> ₹{editingEntry.totalRent.toFixed(2)}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="payment-status" className="text-foreground">Payment Status</Label>
+                  <Select value={paymentStatus} onValueChange={(value: 'paid' | 'unpaid') => setPaymentStatus(value)}>
+                    <SelectTrigger className="bg-input border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="unpaid" className="text-foreground hover:bg-accent/20">Unpaid</SelectItem>
+                      <SelectItem value="paid" className="text-foreground hover:bg-accent/20">Paid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {paymentStatus === 'paid' && (
+                  <>
+                    <div>
+                      <Label htmlFor="payment-date" className="text-foreground">Payment Date</Label>
+                      <Input
+                        id="payment-date"
+                        type="date"
+                        value={paymentDate}
+                        onChange={(e) => setPaymentDate(e.target.value)}
+                        className="bg-input border-border text-foreground"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="payment-notes" className="text-foreground">Payment Notes (Optional)</Label>
+                      <Textarea
+                        id="payment-notes"
+                        value={paymentNotes}
+                        onChange={(e) => setPaymentNotes(e.target.value)}
+                        placeholder="Enter any notes about the payment..."
+                        className="bg-input border-border text-foreground"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => setEditingEntry(null)}
+                  variant="outline"
+                  className="border-border text-foreground hover:bg-accent/20"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSavePaymentInfo}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
