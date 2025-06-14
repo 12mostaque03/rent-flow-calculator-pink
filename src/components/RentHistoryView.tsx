@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { X, Edit, Check, Calendar } from 'lucide-react';
+import { X, Edit, Check, Calendar, Trash2 } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,7 +23,10 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
   const [editData, setEditData] = useState({
     paymentDate: '',
     paymentNotes: '',
-    paymentStatus: 'unpaid' as 'paid' | 'unpaid'
+    paymentStatus: 'unpaid' as 'paid' | 'unpaid',
+    previousReading: 0,
+    currentReading: 0,
+    additionalCharges: 0
   });
 
   useEffect(() => {
@@ -41,30 +44,60 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
     return tenant ? tenant.name : 'Unknown Tenant';
   };
 
+  const getTenant = (tenantId: string) => {
+    return tenants.find(t => t.id === tenantId);
+  };
+
   const filteredEntries = selectedTenantId === 'all' 
     ? rentEntries 
     : rentEntries.filter(entry => entry.tenantId === selectedTenantId);
 
-  const handleEditPayment = (entry: RentEntry) => {
+  const handleEditEntry = (entry: RentEntry) => {
     setEditingEntry(entry.id);
     setEditData({
       paymentDate: entry.paymentDate || '',
       paymentNotes: entry.paymentNotes || '',
-      paymentStatus: entry.paymentStatus || 'unpaid'
+      paymentStatus: entry.paymentStatus || 'unpaid',
+      previousReading: entry.previousReading,
+      currentReading: entry.currentReading,
+      additionalCharges: entry.additionalCharges
     });
   };
 
-  const handleSavePayment = (entryId: string) => {
-    const updatedEntries = rentEntries.map(entry => {
-      if (entry.id === entryId) {
+  const calculateTotalRent = (tenantId: string, previousReading: number, currentReading: number, additionalCharges: number) => {
+    const tenant = getTenant(tenantId);
+    if (!tenant) return 0;
+    
+    const unitsConsumed = currentReading - previousReading;
+    const electricityCost = unitsConsumed * tenant.electricityRate;
+    return tenant.monthlyRent + electricityCost + additionalCharges;
+  };
+
+  const handleSaveEntry = (entryId: string) => {
+    const entry = rentEntries.find(e => e.id === entryId);
+    if (!entry) return;
+
+    const newTotalRent = calculateTotalRent(
+      entry.tenantId,
+      editData.previousReading,
+      editData.currentReading,
+      editData.additionalCharges
+    );
+
+    const updatedEntries = rentEntries.map(e => {
+      if (e.id === entryId) {
         return {
-          ...entry,
+          ...e,
           paymentStatus: editData.paymentStatus,
           paymentDate: editData.paymentDate,
-          paymentNotes: editData.paymentNotes
+          paymentNotes: editData.paymentNotes,
+          previousReading: editData.previousReading,
+          currentReading: editData.currentReading,
+          additionalCharges: editData.additionalCharges,
+          totalRent: newTotalRent
         };
       }
-      return entry;
+      return e;
     });
 
     setRentEntries(updatedEntries);
@@ -72,8 +105,19 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
     setEditingEntry(null);
     
     toast({
-      title: "Payment Updated",
-      description: "Payment information has been saved successfully",
+      title: "Entry Updated",
+      description: "Rent entry has been updated successfully",
+    });
+  };
+
+  const handleDeleteEntry = (entryId: string) => {
+    const updatedEntries = rentEntries.filter(entry => entry.id !== entryId);
+    setRentEntries(updatedEntries);
+    localStorage.setItem('rentEntries', JSON.stringify(updatedEntries));
+    
+    toast({
+      title: "Entry Deleted",
+      description: "Rent entry has been deleted successfully",
     });
   };
 
@@ -82,7 +126,10 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
     setEditData({
       paymentDate: '',
       paymentNotes: '',
-      paymentStatus: 'unpaid'
+      paymentStatus: 'unpaid',
+      previousReading: 0,
+      currentReading: 0,
+      additionalCharges: 0
     });
   };
 
@@ -122,6 +169,29 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
               <div className="flex gap-2 items-center">
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      value={editData.previousReading}
+                      onChange={(e) => setEditData({...editData, previousReading: Number(e.target.value)})}
+                      className="w-32 bg-input border-border text-foreground text-sm"
+                      placeholder="Previous reading"
+                    />
+                    <Input
+                      type="number"
+                      value={editData.currentReading}
+                      onChange={(e) => setEditData({...editData, currentReading: Number(e.target.value)})}
+                      className="w-32 bg-input border-border text-foreground text-sm"
+                      placeholder="Current reading"
+                    />
+                    <Input
+                      type="number"
+                      value={editData.additionalCharges}
+                      onChange={(e) => setEditData({...editData, additionalCharges: Number(e.target.value)})}
+                      className="w-32 bg-input border-border text-foreground text-sm"
+                      placeholder="Additional charges"
+                    />
+                  </div>
+                  <div className="flex gap-2 items-center">
                     <Select 
                       value={editData.paymentStatus} 
                       onValueChange={(value) => setEditData({...editData, paymentStatus: value as 'paid' | 'unpaid'})}
@@ -141,17 +211,17 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                       className="w-40 bg-input border-border text-foreground text-sm"
                       placeholder="Payment date"
                     />
+                    <Textarea
+                      value={editData.paymentNotes}
+                      onChange={(e) => setEditData({...editData, paymentNotes: e.target.value})}
+                      placeholder="Payment notes..."
+                      className="w-72 h-20 bg-input border-border text-foreground text-sm resize-none"
+                    />
                   </div>
-                  <Textarea
-                    value={editData.paymentNotes}
-                    onChange={(e) => setEditData({...editData, paymentNotes: e.target.value})}
-                    placeholder="Payment notes..."
-                    className="w-72 h-20 bg-input border-border text-foreground text-sm resize-none"
-                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button
-                    onClick={() => handleSavePayment(editingEntry)}
+                    onClick={() => handleSaveEntry(editingEntry)}
                     size="sm"
                     className="bg-success hover:bg-success/90"
                   >
@@ -171,7 +241,7 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
               </div>
             ) : (
               <div className="text-muted-foreground text-sm">
-                Click on a row to edit payment information
+                Click on a row to edit entry information
               </div>
             )}
           </div>
@@ -201,16 +271,16 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                   <TableHead className="text-muted-foreground">Payment Date</TableHead>
                   <TableHead className="text-muted-foreground">Payment Notes</TableHead>
                   <TableHead className="text-muted-foreground">Date Created</TableHead>
+                  <TableHead className="text-muted-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((entry) => (
                   <TableRow 
                     key={entry.id} 
-                    className={`border-border cursor-pointer hover:bg-accent/10 ${
+                    className={`border-border hover:bg-accent/10 ${
                       editingEntry === entry.id ? 'bg-primary/20' : ''
                     }`}
-                    onClick={() => handleEditPayment(entry)}
                   >
                     <TableCell className="text-foreground font-medium">
                       {getTenantName(entry.tenantId)}
@@ -238,6 +308,26 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {new Date(entry.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleEditEntry(entry)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-primary hover:text-primary/90"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteEntry(entry.id)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive/90"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

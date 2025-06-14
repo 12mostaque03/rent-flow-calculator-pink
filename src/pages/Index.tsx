@@ -7,8 +7,10 @@ import { TenantSelector } from '@/components/TenantSelector';
 import { RentCalculator } from '@/components/RentCalculator';
 import { RentHistoryView } from '@/components/RentHistoryView';
 import { Tenant } from '@/types/tenant';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const { toast } = useToast();
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [showRentHistory, setShowRentHistory] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -34,6 +36,30 @@ const Index = () => {
     setTenants(updatedTenants);
     localStorage.setItem('tenants', JSON.stringify(updatedTenants));
     setShowAddTenant(false);
+  };
+
+  const handleDeleteTenant = (tenantId: string) => {
+    const updatedTenants = tenants.filter(tenant => tenant.id !== tenantId);
+    setTenants(updatedTenants);
+    localStorage.setItem('tenants', JSON.stringify(updatedTenants));
+    
+    // Clear selected tenant if it was deleted
+    if (selectedTenant?.id === tenantId) {
+      setSelectedTenant(null);
+    }
+
+    // Also remove all rent entries for this tenant
+    const savedEntries = localStorage.getItem('rentEntries');
+    if (savedEntries) {
+      const entries = JSON.parse(savedEntries);
+      const filteredEntries = entries.filter((entry: any) => entry.tenantId !== tenantId);
+      localStorage.setItem('rentEntries', JSON.stringify(filteredEntries));
+    }
+
+    toast({
+      title: "Tenant Deleted",
+      description: "Tenant and all associated rent entries have been removed",
+    });
   };
 
   return (
@@ -63,6 +89,7 @@ const Index = () => {
             tenants={tenants} 
             selectedTenant={selectedTenant}
             onSelectTenant={setSelectedTenant}
+            onDeleteTenant={handleDeleteTenant}
           />
 
           {selectedTenant && (
