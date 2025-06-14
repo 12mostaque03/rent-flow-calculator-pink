@@ -17,4 +17,7 @@ export interface RentEntry {
   additionalCharges: number;
   totalRent: number;
   createdAt: string;
+  paymentStatus?: 'paid' | 'unpaid';
+  paymentDate?: string;
+  paymentNotes?: string;
 }
