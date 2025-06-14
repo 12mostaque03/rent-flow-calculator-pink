@@ -35,11 +35,11 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-pink-900">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900">
       <div className="container mx-auto p-4 max-w-4xl">
         <header className="text-center mb-8 pt-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Rent <span className="text-pink-400">Calculator</span>
+            Rent <span className="text-blue-400">Calculator</span>
           </h1>
           <p className="text-gray-300">Manage your tenants and calculate monthly rent</p>
         </header>
@@ -58,7 +58,7 @@ const Index = () => {
 
         <Button
           onClick={() => setShowAddTenant(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 shadow-lg shadow-pink-500/25"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25"
           size="icon"
         >
           <Plus className="w-6 h-6" />

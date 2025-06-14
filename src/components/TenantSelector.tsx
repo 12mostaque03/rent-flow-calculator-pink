@@ -11,7 +11,7 @@ interface TenantSelectorProps {
 
 export const TenantSelector = ({ tenants, selectedTenant, onSelectTenant }: TenantSelectorProps) => {
   return (
-    <Card className="bg-gray-800/50 backdrop-blur-lg border-pink-500/20 p-6">
+    <Card className="bg-gray-800/50 backdrop-blur-lg border-blue-500/20 p-6">
       <h2 className="text-xl font-semibold text-white mb-4">Select Tenant</h2>
       
       <Select
@@ -35,7 +35,7 @@ export const TenantSelector = ({ tenants, selectedTenant, onSelectTenant }: Tena
 
       {selectedTenant && (
         <div className="mt-4 p-4 bg-gray-700/50 rounded-lg">
-          <h3 className="text-lg font-medium text-pink-400 mb-2">{selectedTenant.name}</h3>
+          <h3 className="text-lg font-medium text-blue-400 mb-2">{selectedTenant.name}</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-300">Monthly Rent:</span>
