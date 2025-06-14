@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900 relative">
       {/* Watermark */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-        <p className="text-blue-400/10 text-8xl font-bold transform rotate-45 select-none">
+        <p className="text-blue-400/10 text-8xl font-bold select-none">
           MOSTAQUE
         </p>
       </div>
