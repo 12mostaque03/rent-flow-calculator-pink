@@ -29,6 +29,21 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
 
   const [totalRent, setTotalRent] = useState(0);
 
+  const getNextMonth = (currentMonth: string, currentYear: string) => {
+    const monthIndex = months.indexOf(currentMonth);
+    if (monthIndex === 11) { // December
+      return {
+        month: months[0], // January
+        year: (parseInt(currentYear) + 1).toString()
+      };
+    } else {
+      return {
+        month: months[monthIndex + 1],
+        year: currentYear
+      };
+    }
+  };
+
   useEffect(() => {
     console.log('Loading previous entries for tenant:', tenant.id);
     // Load last entry for this tenant to get the previous reading
@@ -43,9 +58,14 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       
       if (tenantEntries.length > 0) {
         console.log('Setting previous reading to:', tenantEntries[0].currentReading);
+        const lastEntry = tenantEntries[0];
+        const nextMonth = getNextMonth(lastEntry.month, lastEntry.year.toString());
+        
         setFormData(prev => ({
           ...prev,
-          previousReading: tenantEntries[0].currentReading.toString(),
+          previousReading: lastEntry.currentReading.toString(),
+          month: nextMonth.month,
+          year: nextMonth.year,
         }));
       }
     }
@@ -124,16 +144,17 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       description: `Total rent for ${formData.month} ${formData.year}: ₹${totalRent.toFixed(2)}`,
     });
 
-    // Reset form for next month
+    // Auto-fill next month and reset other fields
+    const nextMonth = getNextMonth(formData.month, formData.year);
     setFormData({
-      month: '',
-      year: new Date().getFullYear().toString(),
+      month: nextMonth.month,
+      year: nextMonth.year,
       previousReading: current.toString(),
       currentReading: '',
       additionalCharges: '0',
     });
 
-    console.log('Form reset completed');
+    console.log('Form reset completed with next month:', nextMonth);
   };
 
   return (
