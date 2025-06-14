@@ -39,7 +39,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Watermark */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
+      <div className="fixed inset-x-0 bottom-0 flex items-end justify-center pointer-events-none z-0 pb-8">
         <div className="flex flex-col items-center">
           <p className="text-accent/10 text-2xl font-normal select-none mb-2">
             Powered by
