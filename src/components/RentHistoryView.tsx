@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { X } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
@@ -13,6 +14,7 @@ interface RentHistoryViewProps {
 
 export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
   const [rentEntries, setRentEntries] = useState<RentEntry[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('all');
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('rentEntries');
@@ -29,6 +31,10 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
     return tenant ? tenant.name : 'Unknown Tenant';
   };
 
+  const filteredEntries = selectedTenantId === 'all' 
+    ? rentEntries 
+    : rentEntries.filter(entry => entry.tenantId === selectedTenantId);
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="bg-gray-800/95 backdrop-blur-lg border-blue-500/20 w-full max-w-6xl max-h-[90vh] overflow-hidden">
@@ -44,9 +50,32 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
           </Button>
         </CardHeader>
         <CardContent className="overflow-auto max-h-[calc(90vh-120px)]">
-          {rentEntries.length === 0 ? (
+          <div className="mb-4">
+            <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+              <SelectTrigger className="w-64 bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Filter by tenant..." />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-700 border-gray-600 z-[60]">
+                <SelectItem value="all" className="text-white hover:bg-gray-600">
+                  All Tenants
+                </SelectItem>
+                {tenants.map((tenant) => (
+                  <SelectItem key={tenant.id} value={tenant.id} className="text-white hover:bg-gray-600">
+                    {tenant.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {filteredEntries.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400 text-lg">No rent entries found</p>
+              <p className="text-gray-400 text-lg">
+                {selectedTenantId === 'all' 
+                  ? 'No rent entries found' 
+                  : `No rent entries found for ${getTenantName(selectedTenantId)}`
+                }
+              </p>
               <p className="text-gray-500 text-sm mt-2">Start calculating rent for your tenants to see entries here</p>
             </div>
           ) : (
@@ -64,7 +93,7 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rentEntries.map((entry) => (
+                {filteredEntries.map((entry) => (
                   <TableRow key={entry.id} className="border-gray-600">
                     <TableCell className="text-white font-medium">
                       {getTenantName(entry.tenantId)}
