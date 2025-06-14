@@ -37,20 +37,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900 relative">
+    <div className="min-h-screen bg-background relative">
       {/* Watermark */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-        <p className="text-blue-400/10 text-8xl font-bold select-none">
+        <p className="text-accent/10 text-8xl font-bold select-none">
           MOSTAQUE
         </p>
       </div>
 
       <div className="container mx-auto p-4 max-w-4xl relative z-10">
         <header className="text-center mb-8 pt-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Rent <span className="text-blue-400">Calculator</span>
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Rent <span className="text-primary">Calculator</span>
           </h1>
-          <p className="text-gray-300">Manage your tenants and calculate monthly rent</p>
+          <p className="text-muted-foreground">Manage your tenants and calculate monthly rent</p>
         </header>
 
         <div className="space-y-6">
@@ -68,7 +68,7 @@ const Index = () => {
         {/* Add Tenant Button */}
         <Button
           onClick={() => setShowAddTenant(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 z-20"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 z-20"
           size="icon"
         >
           <Plus className="w-6 h-6" />
@@ -77,7 +77,7 @@ const Index = () => {
         {/* View Rent History Button */}
         <Button
           onClick={() => setShowRentHistory(true)}
-          className="fixed bottom-6 right-24 w-14 h-14 rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/25 z-20"
+          className="fixed bottom-6 right-24 w-14 h-14 rounded-full bg-success hover:bg-success/90 shadow-lg shadow-success/25 z-20"
           size="icon"
         >
           <List className="w-6 h-6" />

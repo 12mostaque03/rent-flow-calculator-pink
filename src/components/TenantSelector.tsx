@@ -11,8 +11,8 @@ interface TenantSelectorProps {
 
 export const TenantSelector = ({ tenants, selectedTenant, onSelectTenant }: TenantSelectorProps) => {
   return (
-    <Card className="bg-gray-800/50 backdrop-blur-lg border-blue-500/20 p-6">
-      <h2 className="text-xl font-semibold text-white mb-4">Select Tenant</h2>
+    <Card className="bg-card/95 backdrop-blur-lg border-border p-6">
+      <h2 className="text-xl font-semibold text-foreground mb-4">Select Tenant</h2>
       
       <Select
         value={selectedTenant?.id || ''}
@@ -21,12 +21,12 @@ export const TenantSelector = ({ tenants, selectedTenant, onSelectTenant }: Tena
           onSelectTenant(tenant || null);
         }}
       >
-        <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+        <SelectTrigger className="bg-input border-border text-foreground">
           <SelectValue placeholder="Choose a tenant..." />
         </SelectTrigger>
-        <SelectContent className="bg-gray-700 border-gray-600">
+        <SelectContent className="bg-card border-border">
           {tenants.map((tenant) => (
-            <SelectItem key={tenant.id} value={tenant.id} className="text-white hover:bg-gray-600">
+            <SelectItem key={tenant.id} value={tenant.id} className="text-foreground hover:bg-accent/20">
               {tenant.name}
             </SelectItem>
           ))}
@@ -34,16 +34,16 @@ export const TenantSelector = ({ tenants, selectedTenant, onSelectTenant }: Tena
       </Select>
 
       {selectedTenant && (
-        <div className="mt-4 p-4 bg-gray-700/50 rounded-lg">
-          <h3 className="text-lg font-medium text-blue-400 mb-2">{selectedTenant.name}</h3>
+        <div className="mt-4 p-4 bg-muted/20 rounded-lg border border-border">
+          <h3 className="text-lg font-medium text-accent mb-2">{selectedTenant.name}</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-300">Monthly Rent:</span>
-              <span className="text-white font-medium ml-2">₹{selectedTenant.monthlyRent}</span>
+              <span className="text-muted-foreground">Monthly Rent:</span>
+              <span className="text-foreground font-medium ml-2">₹{selectedTenant.monthlyRent}</span>
             </div>
             <div>
-              <span className="text-gray-300">Electricity Rate:</span>
-              <span className="text-white font-medium ml-2">₹{selectedTenant.electricityRate}/unit</span>
+              <span className="text-muted-foreground">Electricity Rate:</span>
+              <span className="text-foreground font-medium ml-2">₹{selectedTenant.electricityRate}/unit</span>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,14 +88,14 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-gray-800/95 backdrop-blur-lg border-blue-500/20 w-full max-w-7xl max-h-[90vh] overflow-hidden">
+      <Card className="bg-card/95 backdrop-blur-lg border-border w-full max-w-7xl max-h-[90vh] overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-white">All Rent Entries</CardTitle>
+          <CardTitle className="text-foreground">All Rent Entries</CardTitle>
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -102,15 +103,15 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
         <CardContent className="overflow-auto max-h-[calc(90vh-120px)]">
           <div className="mb-4 flex gap-4 items-center">
             <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
-              <SelectTrigger className="w-64 bg-gray-700 border-gray-600 text-white">
+              <SelectTrigger className="w-64 bg-input border-border text-foreground">
                 <SelectValue placeholder="Filter by tenant..." />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600 z-[60]">
-                <SelectItem value="all" className="text-white hover:bg-gray-600">
+              <SelectContent className="bg-card border-border z-[60]">
+                <SelectItem value="all" className="text-foreground hover:bg-accent/20">
                   All Tenants
                 </SelectItem>
                 {tenants.map((tenant) => (
-                  <SelectItem key={tenant.id} value={tenant.id} className="text-white hover:bg-gray-600">
+                  <SelectItem key={tenant.id} value={tenant.id} className="text-foreground hover:bg-accent/20">
                     {tenant.name}
                   </SelectItem>
                 ))}
@@ -125,19 +126,19 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                       value={editData.paymentStatus} 
                       onValueChange={(value) => setEditData({...editData, paymentStatus: value as 'paid' | 'unpaid'})}
                     >
-                      <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white text-sm">
+                      <SelectTrigger className="w-32 bg-input border-border text-foreground text-sm">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-700 border-gray-600">
-                        <SelectItem value="paid" className="text-green-400 hover:bg-gray-600">Paid</SelectItem>
-                        <SelectItem value="unpaid" className="text-red-400 hover:bg-gray-600">Unpaid</SelectItem>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="paid" className="text-success hover:bg-accent/20">Paid</SelectItem>
+                        <SelectItem value="unpaid" className="text-destructive hover:bg-accent/20">Unpaid</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input
                       type="date"
                       value={editData.paymentDate}
                       onChange={(e) => setEditData({...editData, paymentDate: e.target.value})}
-                      className="w-40 bg-gray-700 border-gray-600 text-white text-sm"
+                      className="w-40 bg-input border-border text-foreground text-sm"
                       placeholder="Payment date"
                     />
                   </div>
@@ -145,14 +146,14 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                     value={editData.paymentNotes}
                     onChange={(e) => setEditData({...editData, paymentNotes: e.target.value})}
                     placeholder="Payment notes..."
-                    className="w-72 h-20 bg-gray-700 border-gray-600 text-white text-sm resize-none"
+                    className="w-72 h-20 bg-input border-border text-foreground text-sm resize-none"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button
                     onClick={() => handleSavePayment(editingEntry)}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-success hover:bg-success/90"
                   >
                     <Check className="w-4 h-4 mr-1" />
                     Save
@@ -161,7 +162,7 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                     onClick={handleCancelEdit}
                     size="sm"
                     variant="ghost"
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-4 h-4 mr-1" />
                     Cancel
@@ -169,7 +170,7 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                 </div>
               </div>
             ) : (
-              <div className="text-gray-400 text-sm">
+              <div className="text-muted-foreground text-sm">
                 Click on a row to edit payment information
               </div>
             )}
@@ -177,65 +178,65 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
           
           {filteredEntries.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400 text-lg">
+              <p className="text-muted-foreground text-lg">
                 {selectedTenantId === 'all' 
                   ? 'No rent entries found' 
                   : `No rent entries found for ${getTenantName(selectedTenantId)}`
                 }
               </p>
-              <p className="text-gray-500 text-sm mt-2">Start calculating rent for your tenants to see entries here</p>
+              <p className="text-muted-foreground/70 text-sm mt-2">Start calculating rent for your tenants to see entries here</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-600">
-                  <TableHead className="text-gray-300">Tenant</TableHead>
-                  <TableHead className="text-gray-300">Month</TableHead>
-                  <TableHead className="text-gray-300">Year</TableHead>
-                  <TableHead className="text-gray-300">Previous Reading</TableHead>
-                  <TableHead className="text-gray-300">Current Reading</TableHead>
-                  <TableHead className="text-gray-300">Additional Charges</TableHead>
-                  <TableHead className="text-gray-300">Total Rent</TableHead>
-                  <TableHead className="text-gray-300">Payment Status</TableHead>
-                  <TableHead className="text-gray-300">Payment Date</TableHead>
-                  <TableHead className="text-gray-300">Payment Notes</TableHead>
-                  <TableHead className="text-gray-300">Date Created</TableHead>
+                <TableRow className="border-border">
+                  <TableHead className="text-muted-foreground">Tenant</TableHead>
+                  <TableHead className="text-muted-foreground">Month</TableHead>
+                  <TableHead className="text-muted-foreground">Year</TableHead>
+                  <TableHead className="text-muted-foreground">Previous Reading</TableHead>
+                  <TableHead className="text-muted-foreground">Current Reading</TableHead>
+                  <TableHead className="text-muted-foreground">Additional Charges</TableHead>
+                  <TableHead className="text-muted-foreground">Total Rent</TableHead>
+                  <TableHead className="text-muted-foreground">Payment Status</TableHead>
+                  <TableHead className="text-muted-foreground">Payment Date</TableHead>
+                  <TableHead className="text-muted-foreground">Payment Notes</TableHead>
+                  <TableHead className="text-muted-foreground">Date Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((entry) => (
                   <TableRow 
                     key={entry.id} 
-                    className={`border-gray-600 cursor-pointer hover:bg-gray-700/50 ${
-                      editingEntry === entry.id ? 'bg-blue-500/20' : ''
+                    className={`border-border cursor-pointer hover:bg-accent/10 ${
+                      editingEntry === entry.id ? 'bg-primary/20' : ''
                     }`}
                     onClick={() => handleEditPayment(entry)}
                   >
-                    <TableCell className="text-white font-medium">
+                    <TableCell className="text-foreground font-medium">
                       {getTenantName(entry.tenantId)}
                     </TableCell>
-                    <TableCell className="text-gray-300">{entry.month}</TableCell>
-                    <TableCell className="text-gray-300">{entry.year}</TableCell>
-                    <TableCell className="text-gray-300">{entry.previousReading}</TableCell>
-                    <TableCell className="text-gray-300">{entry.currentReading}</TableCell>
-                    <TableCell className="text-gray-300">₹{entry.additionalCharges}</TableCell>
-                    <TableCell className="text-blue-400 font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
+                    <TableCell className="text-muted-foreground">{entry.month}</TableCell>
+                    <TableCell className="text-muted-foreground">{entry.year}</TableCell>
+                    <TableCell className="text-muted-foreground">{entry.previousReading}</TableCell>
+                    <TableCell className="text-muted-foreground">{entry.currentReading}</TableCell>
+                    <TableCell className="text-muted-foreground">₹{entry.additionalCharges}</TableCell>
+                    <TableCell className="text-accent font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded text-xs ${
                         entry.paymentStatus === 'paid' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-red-500/20 text-red-400'
+                          ? 'bg-success/20 text-success' 
+                          : 'bg-destructive/20 text-destructive'
                       }`}>
                         {entry.paymentStatus || 'Unpaid'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-gray-300 text-xs">
+                    <TableCell className="text-muted-foreground text-xs">
                       {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '-'}
                     </TableCell>
-                    <TableCell className="text-gray-300 text-xs max-w-32 break-words">
+                    <TableCell className="text-muted-foreground text-xs max-w-32 break-words">
                       {entry.paymentNotes || '-'}
                     </TableCell>
-                    <TableCell className="text-gray-300 text-xs">
+                    <TableCell className="text-muted-foreground text-xs">
                       {new Date(entry.createdAt).toLocaleDateString()}
                     </TableCell>
                   </TableRow>
