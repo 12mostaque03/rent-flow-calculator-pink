@@ -23,4 +23,5 @@ export interface RentEntry {
   amountPaid?: number;
   balance?: number;
   previousBalance?: number;
+  advanceCredit?: number; // Credit from overpayment to carry forward
 }

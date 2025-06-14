@@ -28,6 +28,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
 
   const [totalRent, setTotalRent] = useState(0);
   const [previousBalance, setPreviousBalance] = useState(0);
+  const [advanceCredit, setAdvanceCredit] = useState(0);
 
   const getNextMonth = (currentMonth: string, currentYear: string) => {
     const monthIndex = months.indexOf(currentMonth);
@@ -60,8 +61,9 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         const lastEntry = tenantEntries[0];
         const nextMonth = getNextMonth(lastEntry.month, lastEntry.year.toString());
         
-        // Set previous balance from the last entry
+        // Set previous balance and advance credit from the last entry
         setPreviousBalance(lastEntry.balance || 0);
+        setAdvanceCredit(lastEntry.advanceCredit || 0);
         
         setFormData(prev => ({
           ...prev,
@@ -116,6 +118,10 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       return;
     }
 
+    // Calculate the final amount due after applying advance credit
+    const totalDue = totalRent + previousBalance - advanceCredit;
+    const finalAmountDue = Math.max(0, totalDue); // Can't be negative
+
     const newEntry: RentEntry = {
       id: Date.now().toString(),
       tenantId: tenant.id,
@@ -126,7 +132,8 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       additionalCharges: parseFloat(formData.additionalCharges) || 0,
       totalRent,
       previousBalance,
-      balance: totalRent + previousBalance, // Initial balance is total amount due
+      advanceCredit,
+      balance: finalAmountDue, // Initial balance is final amount due
       createdAt: new Date().toISOString(),
     };
 
@@ -144,7 +151,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
 
     toast({
       title: "Rent Saved Successfully",
-      description: `Total rent for ${formData.month} ${formData.year}: ₹${totalRent.toFixed(2)}${previousBalance > 0 ? ` (includes previous balance: ₹${previousBalance.toFixed(2)})` : ''}`,
+      description: `Total rent for ${formData.month} ${formData.year}: ₹${finalAmountDue.toFixed(2)}${advanceCredit > 0 ? ` (₹${advanceCredit.toFixed(2)} advance credit applied)` : ''}`,
     });
 
     const nextMonth = getNextMonth(formData.month, formData.year);
@@ -155,10 +162,14 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       currentReading: '',
       additionalCharges: '0',
     });
-    setPreviousBalance(0); // Reset for next entry
+    setPreviousBalance(0);
+    setAdvanceCredit(0); // Reset for next entry
 
     console.log('Form reset completed with next month:', nextMonth);
   };
+
+  // Calculate final amount due after applying advance credit
+  const finalAmountDue = Math.max(0, totalRent + previousBalance - advanceCredit);
 
   return (
     <Card className="bg-gray-800/50 backdrop-blur-lg border-blue-500/20 p-6">
@@ -170,6 +181,13 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
           <h3 className="text-yellow-400 font-semibold mb-2">Previous Balance Due</h3>
           <p className="text-white">₹{previousBalance.toFixed(2)} from previous month will be added to this month's rent.</p>
+        </div>
+      )}
+
+      {advanceCredit > 0 && (
+        <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
+          <h3 className="text-green-400 font-semibold mb-2">Advance Credit Available</h3>
+          <p className="text-white">₹{advanceCredit.toFixed(2)} advance payment will be applied to this month's rent.</p>
         </div>
       )}
 
@@ -263,12 +281,16 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
             <span className="text-blue-400">Total This Month:</span>
             <span className="text-blue-400 text-lg">₹{totalRent.toFixed(2)}</span>
           </div>
-          {previousBalance > 0 && (
-            <div className="flex justify-between font-bold text-lg">
-              <span className="text-yellow-400">Total Amount Due:</span>
-              <span className="text-yellow-400">₹{(totalRent + previousBalance).toFixed(2)}</span>
+          {advanceCredit > 0 && (
+            <div className="flex justify-between">
+              <span className="text-green-400">Advance Credit Applied:</span>
+              <span className="text-green-400">-₹{advanceCredit.toFixed(2)}</span>
             </div>
           )}
+          <div className="flex justify-between font-bold text-lg">
+            <span className="text-yellow-400">Final Amount Due:</span>
+            <span className="text-yellow-400">₹{finalAmountDue.toFixed(2)}</span>
+          </div>
         </div>
       </div>
 

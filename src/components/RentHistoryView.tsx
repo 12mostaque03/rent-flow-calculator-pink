@@ -69,19 +69,25 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     if (!editingEntry) return;
 
     const paidAmount = parseFloat(amountPaid) || 0;
-    const totalWithBalance = editingEntry.totalRent + (editingEntry.previousBalance || 0);
+    const totalWithBalance = editingEntry.totalRent + (editingEntry.previousBalance || 0) - (editingEntry.advanceCredit || 0);
+    const finalAmountDue = Math.max(0, totalWithBalance);
     let newPaymentStatus: 'paid' | 'unpaid' | 'partial' = 'unpaid';
     let balance = 0;
+    let advanceCredit = 0;
 
-    if (paidAmount >= totalWithBalance) {
+    if (paidAmount >= finalAmountDue) {
       newPaymentStatus = 'paid';
       balance = 0;
+      // If paid more than due, create advance credit
+      if (paidAmount > finalAmountDue) {
+        advanceCredit = paidAmount - finalAmountDue;
+      }
     } else if (paidAmount > 0) {
       newPaymentStatus = 'partial';
-      balance = totalWithBalance - paidAmount;
+      balance = finalAmountDue - paidAmount;
     } else {
       newPaymentStatus = 'unpaid';
-      balance = totalWithBalance;
+      balance = finalAmountDue;
     }
 
     const updatedEntry = {
@@ -91,6 +97,7 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
       paymentNotes: paymentNotes || undefined,
       amountPaid: paidAmount || undefined,
       balance: balance || undefined,
+      advanceCredit: advanceCredit || undefined,
     };
 
     const updatedEntries = rentEntries.map(entry => 
@@ -108,7 +115,7 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
 
     toast({
       title: "Payment Info Updated",
-      description: `Payment information updated. ${balance > 0 ? `Balance: ₹${balance.toFixed(2)}` : 'Fully paid'}`,
+      description: `Payment information updated. ${balance > 0 ? `Balance: ₹${balance.toFixed(2)}` : advanceCredit > 0 ? `Advance Credit: ₹${advanceCredit.toFixed(2)}` : 'Fully paid'}`,
     });
   };
 
@@ -184,6 +191,7 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                   <TableHead className="text-muted-foreground">Current Reading</TableHead>
                   <TableHead className="text-muted-foreground">Additional Charges</TableHead>
                   <TableHead className="text-muted-foreground">Previous Balance</TableHead>
+                  <TableHead className="text-muted-foreground">Advance Credit</TableHead>
                   <TableHead className="text-muted-foreground">Total Rent</TableHead>
                   <TableHead className="text-muted-foreground">Amount Paid</TableHead>
                   <TableHead className="text-muted-foreground">Balance</TableHead>
@@ -210,6 +218,9 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                     <TableCell className="text-muted-foreground">₹{entry.additionalCharges}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {entry.previousBalance ? `₹${entry.previousBalance.toFixed(2)}` : '-'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {entry.advanceCredit ? `₹${entry.advanceCredit.toFixed(2)}` : '-'}
                     </TableCell>
                     <TableCell className="text-accent font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
                     <TableCell className="text-muted-foreground">
@@ -278,8 +289,11 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                 <div>
                   <strong>Previous Balance:</strong> ₹{(editingEntry.previousBalance || 0).toFixed(2)}
                 </div>
-                <div className="col-span-2">
-                  <strong>Total Amount Due:</strong> ₹{(editingEntry.totalRent + (editingEntry.previousBalance || 0)).toFixed(2)}
+                <div>
+                  <strong>Advance Credit:</strong> ₹{(editingEntry.advanceCredit || 0).toFixed(2)}
+                </div>
+                <div className="col-span-1">
+                  <strong>Final Amount Due:</strong> ₹{Math.max(0, editingEntry.totalRent + (editingEntry.previousBalance || 0) - (editingEntry.advanceCredit || 0)).toFixed(2)}
                 </div>
               </div>
 
