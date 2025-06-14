@@ -69,6 +69,10 @@ const Index = () => {
           onClose={() => setShowAddTenant(false)}
           onAddTenant={handleAddTenant}
         />
+
+        <footer className="text-center mt-12 pb-8">
+          <p className="text-blue-400 text-xl font-bold">MOSTAQUE</p>
+        </footer>
       </div>
     </div>
   );
