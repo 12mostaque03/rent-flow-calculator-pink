@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,12 +91,10 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     });
   };
 
-  const handleEditSelectedTenantEntries = () => {
-    if (selectedTenantId !== 'all') {
+  const handleEditLatestEntry = () => {
+    if (selectedTenantId !== 'all' && filteredEntries.length > 0) {
       const latestEntry = filteredEntries[0]; // Get the most recent entry for this tenant
-      if (latestEntry) {
-        handleEditEntry(latestEntry);
-      }
+      handleEditEntry(latestEntry);
     }
   };
 
@@ -132,6 +129,17 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                 ))}
               </SelectContent>
             </Select>
+            
+            {selectedTenantId !== 'all' && filteredEntries.length > 0 && (
+              <Button
+                onClick={handleEditLatestEntry}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Payment Status
+              </Button>
+            )}
           </div>
           
           {filteredEntries.length === 0 ? (
@@ -196,24 +204,14 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                       {new Date(entry.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          onClick={() => handleEditEntry(entry)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-primary hover:text-primary/90"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive/90"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive/90"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
