@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,7 +100,7 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
           </Button>
         </CardHeader>
         <CardContent className="overflow-auto max-h-[calc(90vh-120px)]">
-          <div className="mb-4">
+          <div className="mb-4 flex gap-4 items-center">
             <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
               <SelectTrigger className="w-64 bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Filter by tenant..." />
@@ -117,6 +116,63 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                 ))}
               </SelectContent>
             </Select>
+
+            {editingEntry ? (
+              <div className="flex gap-2 items-center">
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2 items-center">
+                    <Select 
+                      value={editData.paymentStatus} 
+                      onValueChange={(value) => setEditData({...editData, paymentStatus: value as 'paid' | 'unpaid'})}
+                    >
+                      <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600">
+                        <SelectItem value="paid" className="text-green-400 hover:bg-gray-600">Paid</SelectItem>
+                        <SelectItem value="unpaid" className="text-red-400 hover:bg-gray-600">Unpaid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="date"
+                      value={editData.paymentDate}
+                      onChange={(e) => setEditData({...editData, paymentDate: e.target.value})}
+                      className="w-40 bg-gray-700 border-gray-600 text-white text-sm"
+                      placeholder="Payment date"
+                    />
+                  </div>
+                  <Textarea
+                    value={editData.paymentNotes}
+                    onChange={(e) => setEditData({...editData, paymentNotes: e.target.value})}
+                    placeholder="Payment notes..."
+                    className="w-72 h-20 bg-gray-700 border-gray-600 text-white text-sm resize-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={() => handleSavePayment(editingEntry)}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="w-4 h-4 mr-1" />
+                    Save
+                  </Button>
+                  <Button
+                    onClick={handleCancelEdit}
+                    size="sm"
+                    variant="ghost"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-400 text-sm">
+                Click on a row to edit payment information
+              </div>
+            )}
           </div>
           
           {filteredEntries.length === 0 ? (
@@ -144,12 +200,17 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                   <TableHead className="text-gray-300">Payment Date</TableHead>
                   <TableHead className="text-gray-300">Payment Notes</TableHead>
                   <TableHead className="text-gray-300">Date Created</TableHead>
-                  <TableHead className="text-gray-300">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((entry) => (
-                  <TableRow key={entry.id} className="border-gray-600">
+                  <TableRow 
+                    key={entry.id} 
+                    className={`border-gray-600 cursor-pointer hover:bg-gray-700/50 ${
+                      editingEntry === entry.id ? 'bg-blue-500/20' : ''
+                    }`}
+                    onClick={() => handleEditPayment(entry)}
+                  >
                     <TableCell className="text-white font-medium">
                       {getTenantName(entry.tenantId)}
                     </TableCell>
@@ -160,89 +221,22 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                     <TableCell className="text-gray-300">₹{entry.additionalCharges}</TableCell>
                     <TableCell className="text-blue-400 font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
                     <TableCell>
-                      {editingEntry === entry.id ? (
-                        <Select 
-                          value={editData.paymentStatus} 
-                          onValueChange={(value) => setEditData({...editData, paymentStatus: value as 'paid' | 'unpaid'})}
-                        >
-                          <SelectTrigger className="w-24 bg-gray-700 border-gray-600 text-white text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-gray-700 border-gray-600">
-                            <SelectItem value="paid" className="text-green-400 hover:bg-gray-600">Paid</SelectItem>
-                            <SelectItem value="unpaid" className="text-red-400 hover:bg-gray-600">Unpaid</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          entry.paymentStatus === 'paid' 
-                            ? 'bg-green-500/20 text-green-400' 
-                            : 'bg-red-500/20 text-red-400'
-                        }`}>
-                          {entry.paymentStatus || 'Unpaid'}
-                        </span>
-                      )}
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        entry.paymentStatus === 'paid' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {entry.paymentStatus || 'Unpaid'}
+                      </span>
                     </TableCell>
-                    <TableCell>
-                      {editingEntry === entry.id ? (
-                        <Input
-                          type="date"
-                          value={editData.paymentDate}
-                          onChange={(e) => setEditData({...editData, paymentDate: e.target.value})}
-                          className="w-36 bg-gray-700 border-gray-600 text-white text-xs"
-                        />
-                      ) : (
-                        <span className="text-gray-300 text-xs">
-                          {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '-'}
-                        </span>
-                      )}
+                    <TableCell className="text-gray-300 text-xs">
+                      {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '-'}
                     </TableCell>
-                    <TableCell className="max-w-32">
-                      {editingEntry === entry.id ? (
-                        <Textarea
-                          value={editData.paymentNotes}
-                          onChange={(e) => setEditData({...editData, paymentNotes: e.target.value})}
-                          placeholder="Payment notes..."
-                          className="w-32 h-16 bg-gray-700 border-gray-600 text-white text-xs resize-none"
-                        />
-                      ) : (
-                        <span className="text-gray-300 text-xs break-words">
-                          {entry.paymentNotes || '-'}
-                        </span>
-                      )}
+                    <TableCell className="text-gray-300 text-xs max-w-32 break-words">
+                      {entry.paymentNotes || '-'}
                     </TableCell>
                     <TableCell className="text-gray-300 text-xs">
                       {new Date(entry.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {editingEntry === entry.id ? (
-                        <div className="flex gap-1">
-                          <Button
-                            onClick={() => handleSavePayment(entry.id)}
-                            size="icon"
-                            className="w-6 h-6 bg-green-600 hover:bg-green-700"
-                          >
-                            <Check className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            onClick={handleCancelEdit}
-                            size="icon"
-                            variant="ghost"
-                            className="w-6 h-6 text-gray-400 hover:text-white"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => handleEditPayment(entry)}
-                          size="icon"
-                          variant="ghost"
-                          className="w-6 h-6 text-gray-400 hover:text-blue-400"
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                      )}
                     </TableCell>
                   </TableRow>
                 ))}
