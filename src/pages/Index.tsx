@@ -40,9 +40,14 @@ const Index = () => {
     <div className="min-h-screen bg-background relative">
       {/* Watermark */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-        <p className="text-accent/10 text-8xl font-bold select-none">
-          MOSTAQUE
-        </p>
+        <div className="flex flex-col items-center">
+          <p className="text-accent/10 text-2xl font-normal select-none mb-2">
+            Powered by
+          </p>
+          <p className="text-accent/10 text-8xl font-bold select-none">
+            MOSTAQUE
+          </p>
+        </div>
       </div>
 
       <div className="container mx-auto p-4 max-w-4xl relative z-10">
