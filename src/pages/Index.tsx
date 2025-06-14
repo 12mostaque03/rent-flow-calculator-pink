@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -168,7 +167,6 @@ const Index = () => {
           open={showAddTenant}
           onClose={handleCloseAddTenantDialog}
           onAddTenant={editingTenant ? handleUpdateTenant : handleAddTenant}
-          editingTenant={editingTenant}
         />
 
         {showRentHistory && (
