@@ -4,16 +4,17 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Edit } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
 interface RentHistoryViewProps {
   tenants: Tenant[];
   onClose: () => void;
+  onEditRentEntry?: (entry: RentEntry) => void;
 }
 
-export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
+export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHistoryViewProps) => {
   const { toast } = useToast();
   const [rentEntries, setRentEntries] = useState<RentEntry[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('all');
@@ -46,6 +47,12 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
       title: "Entry Deleted",
       description: "Rent entry has been deleted successfully",
     });
+  };
+
+  const handleEditEntry = (entry: RentEntry) => {
+    if (onEditRentEntry) {
+      onEditRentEntry(entry);
+    }
   };
 
   return (
@@ -143,14 +150,24 @@ export const RentHistoryView = ({ tenants, onClose }: RentHistoryViewProps) => {
                       {new Date(entry.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        onClick={() => handleDeleteEntry(entry.id)}
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive/90"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          onClick={() => handleEditEntry(entry)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-primary hover:text-primary/90"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteEntry(entry.id)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive/90"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

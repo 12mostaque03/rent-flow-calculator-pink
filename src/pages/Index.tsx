@@ -6,7 +6,7 @@ import { AddTenantDialog } from '@/components/AddTenantDialog';
 import { TenantSelector } from '@/components/TenantSelector';
 import { RentCalculator } from '@/components/RentCalculator';
 import { RentHistoryView } from '@/components/RentHistoryView';
-import { Tenant } from '@/types/tenant';
+import { Tenant, RentEntry } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -100,15 +100,25 @@ const Index = () => {
     setEditingTenant(null);
   };
 
+  const handleEditRentEntry = (entry: RentEntry) => {
+    // Find the tenant for this entry and select them
+    const tenant = tenants.find(t => t.id === entry.tenantId);
+    if (tenant) {
+      setSelectedTenant(tenant);
+      setShowRentHistory(false);
+      // The RentCalculator component will handle loading the entry for editing
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Watermark */}
-      <div className="fixed inset-x-0 bottom-0 flex items-end justify-center pointer-events-none z-0 pb-8">
+      {/* Watermark at the bottom */}
+      <div className="fixed inset-x-0 bottom-0 flex items-end justify-center pointer-events-none z-0 pb-4">
         <div className="flex flex-col items-center">
-          <p className="text-accent/10 text-2xl font-normal select-none mb-2">
+          <p className="text-accent/10 text-lg font-normal select-none mb-1">
             Powered by
           </p>
-          <p className="text-accent/10 text-8xl font-bold select-none">
+          <p className="text-accent/10 text-4xl font-bold select-none">
             MOSTAQUE
           </p>
         </div>
@@ -165,6 +175,7 @@ const Index = () => {
           <RentHistoryView
             tenants={tenants}
             onClose={() => setShowRentHistory(false)}
+            onEditRentEntry={handleEditRentEntry}
           />
         )}
       </div>
