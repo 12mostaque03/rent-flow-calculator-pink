@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Trash2, Edit } from 'lucide-react';
+import { X, Edit } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,17 +45,6 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
   const filteredEntries = selectedTenantId === 'all' 
     ? rentEntries 
     : rentEntries.filter(entry => entry.tenantId === selectedTenantId);
-
-  const handleDeleteEntry = (entryId: string) => {
-    const updatedEntries = rentEntries.filter(entry => entry.id !== entryId);
-    setRentEntries(updatedEntries);
-    localStorage.setItem('rentEntries', JSON.stringify(updatedEntries));
-    
-    toast({
-      title: "Entry Deleted",
-      description: "Rent entry has been deleted successfully",
-    });
-  };
 
   const handleEditEntry = (entry: RentEntry) => {
     setEditingEntry(entry);
@@ -165,7 +154,7 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
                 className="border-primary text-primary hover:bg-primary/10"
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Payment Status
+                Edit Latest Payment
               </Button>
             )}
           </div>
@@ -181,88 +170,106 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
               <p className="text-muted-foreground/70 text-sm mt-2">Start calculating rent for your tenants to see entries here</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead className="text-muted-foreground">Tenant</TableHead>
-                  <TableHead className="text-muted-foreground">Month</TableHead>
-                  <TableHead className="text-muted-foreground">Year</TableHead>
-                  <TableHead className="text-muted-foreground">Previous Reading</TableHead>
-                  <TableHead className="text-muted-foreground">Current Reading</TableHead>
-                  <TableHead className="text-muted-foreground">Additional Charges</TableHead>
-                  <TableHead className="text-muted-foreground">Previous Balance</TableHead>
-                  <TableHead className="text-muted-foreground">Advance Credit</TableHead>
-                  <TableHead className="text-muted-foreground">Total Rent</TableHead>
-                  <TableHead className="text-muted-foreground">Amount Paid</TableHead>
-                  <TableHead className="text-muted-foreground">Balance</TableHead>
-                  <TableHead className="text-muted-foreground">Payment Status</TableHead>
-                  <TableHead className="text-muted-foreground">Payment Date</TableHead>
-                  <TableHead className="text-muted-foreground">Payment Notes</TableHead>
-                  <TableHead className="text-muted-foreground">Date Created</TableHead>
-                  <TableHead className="text-muted-foreground">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEntries.map((entry) => (
-                  <TableRow 
-                    key={entry.id} 
-                    className="border-border hover:bg-accent/10"
-                  >
-                    <TableCell className="text-foreground font-medium">
-                      {getTenantName(entry.tenantId)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{entry.month}</TableCell>
-                    <TableCell className="text-muted-foreground">{entry.year}</TableCell>
-                    <TableCell className="text-muted-foreground">{entry.previousReading}</TableCell>
-                    <TableCell className="text-muted-foreground">{entry.currentReading}</TableCell>
-                    <TableCell className="text-muted-foreground">₹{entry.additionalCharges}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.previousBalance ? `₹${entry.previousBalance.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.advanceCredit ? `₹${entry.advanceCredit.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell className="text-accent font-semibold">₹{entry.totalRent.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.amountPaid ? `₹${entry.amountPaid.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.balance ? `₹${entry.balance.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        entry.paymentStatus === 'paid' 
-                          ? 'bg-success/20 text-success' 
-                          : entry.paymentStatus === 'partial'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-destructive/20 text-destructive'
-                      }`}>
-                        {entry.paymentStatus || 'Unpaid'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs max-w-32 break-words">
-                      {entry.paymentNotes || '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {new Date(entry.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        onClick={() => handleDeleteEntry(entry.id)}
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive/90"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid gap-4">
+              {filteredEntries.map((entry) => (
+                <Card key={entry.id} className="border-border hover:bg-accent/5 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {getTenantName(entry.tenantId)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.month} {entry.year} • Created: {new Date(entry.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          entry.paymentStatus === 'paid' 
+                            ? 'bg-success/20 text-success' 
+                            : entry.paymentStatus === 'partial'
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-destructive/20 text-destructive'
+                        }`}>
+                          {entry.paymentStatus || 'Unpaid'}
+                        </span>
+                        <Button
+                          onClick={() => handleEditEntry(entry)}
+                          size="sm"
+                          variant="outline"
+                          className="text-primary border-primary hover:bg-primary/10"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Electricity Reading:</span>
+                        <p className="text-foreground font-medium">
+                          {entry.previousReading} → {entry.currentReading}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <span className="text-muted-foreground">Additional Charges:</span>
+                        <p className="text-foreground font-medium">₹{entry.additionalCharges}</p>
+                      </div>
+                      
+                      {entry.previousBalance && entry.previousBalance > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Previous Balance:</span>
+                          <p className="text-destructive font-medium">₹{entry.previousBalance.toFixed(2)}</p>
+                        </div>
+                      )}
+                      
+                      {entry.advanceCredit && entry.advanceCredit > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Advance Credit:</span>
+                          <p className="text-success font-medium">₹{entry.advanceCredit.toFixed(2)}</p>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <span className="text-muted-foreground">Total Rent:</span>
+                        <p className="text-accent font-bold text-lg">₹{entry.totalRent.toFixed(2)}</p>
+                      </div>
+                      
+                      {entry.amountPaid && (
+                        <div>
+                          <span className="text-muted-foreground">Amount Paid:</span>
+                          <p className="text-success font-medium">₹{entry.amountPaid.toFixed(2)}</p>
+                        </div>
+                      )}
+                      
+                      {entry.balance && entry.balance > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Outstanding Balance:</span>
+                          <p className="text-destructive font-medium">₹{entry.balance.toFixed(2)}</p>
+                        </div>
+                      )}
+                      
+                      {entry.paymentDate && (
+                        <div>
+                          <span className="text-muted-foreground">Payment Date:</span>
+                          <p className="text-foreground font-medium">
+                            {new Date(entry.paymentDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {entry.paymentNotes && (
+                      <div className="mt-3 p-2 bg-muted/20 rounded">
+                        <span className="text-muted-foreground text-sm">Notes:</span>
+                        <p className="text-foreground text-sm mt-1">{entry.paymentNotes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
