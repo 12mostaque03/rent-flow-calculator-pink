@@ -30,6 +30,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   const [totalRent, setTotalRent] = useState(0);
 
   useEffect(() => {
+    console.log('Loading previous entries for tenant:', tenant.id);
     // Load last entry for this tenant to get the previous reading
     const savedEntries = localStorage.getItem('rentEntries');
     if (savedEntries) {
@@ -38,7 +39,10 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         .filter(entry => entry.tenantId === tenant.id)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
+      console.log('Found tenant entries:', tenantEntries.length);
+      
       if (tenantEntries.length > 0) {
+        console.log('Setting previous reading to:', tenantEntries[0].currentReading);
         setFormData(prev => ({
           ...prev,
           previousReading: tenantEntries[0].currentReading.toString(),
@@ -63,7 +67,12 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   }, [formData, tenant]);
 
   const handleSave = () => {
+    console.log('Save button clicked');
+    console.log('Form data:', formData);
+    console.log('Total rent:', totalRent);
+
     if (!formData.month || !formData.currentReading) {
+      console.log('Missing required fields - month:', formData.month, 'currentReading:', formData.currentReading);
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -76,6 +85,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
     const current = parseFloat(formData.currentReading) || 0;
 
     if (current < previous) {
+      console.log('Invalid reading - current:', current, 'previous:', previous);
       toast({
         title: "Invalid Reading",
         description: "Current reading cannot be less than previous reading",
@@ -96,10 +106,18 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       createdAt: new Date().toISOString(),
     };
 
+    console.log('Creating new entry:', newEntry);
+
     const savedEntries = localStorage.getItem('rentEntries');
     const entries: RentEntry[] = savedEntries ? JSON.parse(savedEntries) : [];
     entries.push(newEntry);
+    
+    console.log('Saving entries to localStorage:', entries);
     localStorage.setItem('rentEntries', JSON.stringify(entries));
+
+    // Verify it was saved
+    const verifyEntries = localStorage.getItem('rentEntries');
+    console.log('Verified saved entries:', verifyEntries ? JSON.parse(verifyEntries) : null);
 
     toast({
       title: "Rent Saved Successfully",
@@ -114,6 +132,8 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
       currentReading: '',
       additionalCharges: '0',
     });
+
+    console.log('Form reset completed');
   };
 
   return (
