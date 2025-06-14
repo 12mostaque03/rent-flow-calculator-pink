@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -144,28 +145,29 @@ const Index = () => {
             onEditTenant={handleEditTenant}
           />
 
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center">
+            <Button
+              onClick={() => setShowAddTenant(true)}
+              className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add New Tenant
+            </Button>
+
+            <Button
+              onClick={() => setShowRentHistory(true)}
+              className="bg-success hover:bg-success/90 shadow-lg shadow-success/25"
+            >
+              <List className="w-5 h-5 mr-2" />
+              View All Entries
+            </Button>
+          </div>
+
           {selectedTenant && (
             <RentCalculator tenant={selectedTenant} />
           )}
         </div>
-
-        {/* Add Tenant Button */}
-        <Button
-          onClick={() => setShowAddTenant(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 z-20"
-          size="icon"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-
-        {/* View Rent History Button */}
-        <Button
-          onClick={() => setShowRentHistory(true)}
-          className="fixed bottom-6 right-24 w-14 h-14 rounded-full bg-success hover:bg-success/90 shadow-lg shadow-success/25 z-20"
-          size="icon"
-        >
-          <List className="w-6 h-6" />
-        </Button>
 
         <AddTenantDialog
           open={showAddTenant}
