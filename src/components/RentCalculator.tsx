@@ -30,7 +30,7 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
   const [totalRent, setTotalRent] = useState(0);
   const [previousBalance, setPreviousBalance] = useState(0);
   const [advanceCredit, setAdvanceCredit] = useState(0);
-  const [carriedFromMonth, setCarriedFromMonth] = useState<string>(''); // Track which month the balance came from
+  const [carriedFromMonth, setCarriedFromMonth] = useState<string>('');
 
   const getNextMonth = (currentMonth: string, currentYear: string) => {
     const monthIndex = months.indexOf(currentMonth);
@@ -63,12 +63,14 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
         const lastEntry = tenantEntries[0];
         const nextMonth = getNextMonth(lastEntry.month, lastEntry.year.toString());
         
-        // Set previous balance and advance credit from the last entry, but only if balance hasn't been paid
+        // Only carry forward balance if it hasn't been marked as paid
         const balanceToCarry = (lastEntry.balance && !lastEntry.isBalancePaid) ? lastEntry.balance : 0;
+        
+        // Set previous balance - it will be 0 if the balance was paid separately
         setPreviousBalance(balanceToCarry);
         setAdvanceCredit(lastEntry.advanceCredit || 0);
         
-        // Track which month the balance came from
+        // Track which month the balance came from (only if there's a balance to carry)
         if (balanceToCarry > 0) {
           setCarriedFromMonth(`${lastEntry.month} ${lastEntry.year}`);
         } else {
@@ -165,6 +167,8 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
     }
     if (previousBalance > 0) {
       toastMessage += ` (₹${previousBalance.toFixed(2)} added from ${carriedFromMonth})`;
+    } else if (carriedFromMonth) {
+      toastMessage += ` (Previous balance from ${carriedFromMonth} was already paid)`;
     }
 
     toast({
@@ -204,6 +208,16 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
           </p>
           <p className="text-yellow-200 text-sm mt-1">
             This amount was carried forward because it wasn't fully paid in {carriedFromMonth}.
+          </p>
+        </div>
+      )}
+
+      {/* Show message when previous balance was paid */}
+      {carriedFromMonth && previousBalance === 0 && (
+        <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
+          <h3 className="text-green-400 font-semibold mb-2">Previous Balance Cleared</h3>
+          <p className="text-white">
+            Previous balance from <span className="font-semibold text-green-300">{carriedFromMonth}</span> has been marked as paid and will not be added to this month's rent.
           </p>
         </div>
       )}
@@ -289,6 +303,12 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
               <span className="text-yellow-400">₹{previousBalance.toFixed(2)}</span>
             </div>
           )}
+          {carriedFromMonth && previousBalance === 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-300">Previous Balance (from {carriedFromMonth}):</span>
+              <span className="text-green-400">₹0.00 (Already Paid)</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-gray-300">Room Rent:</span>
             <span className="text-white">₹{tenant.monthlyRent}</span>
@@ -318,6 +338,11 @@ export const RentCalculator = ({ tenant }: RentCalculatorProps) => {
           {previousBalance > 0 && (
             <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-700/50 rounded">
               <strong>Note:</strong> ₹{previousBalance.toFixed(2)} was added from {carriedFromMonth} because the balance wasn't fully paid that month.
+            </div>
+          )}
+          {carriedFromMonth && previousBalance === 0 && (
+            <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-700/50 rounded">
+              <strong>Note:</strong> Previous balance from {carriedFromMonth} was marked as paid separately, so it's not included in this month's calculation.
             </div>
           )}
         </div>
