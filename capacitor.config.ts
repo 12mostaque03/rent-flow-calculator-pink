@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Rent Calculator',
   webDir: 'dist',
   server: {
-    url: 'https://e343dd9d-5751-4ffa-9726-2cda84ba3802.lovableproject.com?forceHideBadge=true',
+    // Remove the server URL for offline mode
     cleartext: true
   },
   plugins: {
