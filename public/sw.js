@@ -1,10 +1,9 @@
 
-const CACHE_NAME = 'rent-calculator-v1';
+const CACHE_NAME = 'rent-calculator-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', function(event) {

@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Edit, CheckCircle } from 'lucide-react';
+import { X, Edit, CheckCircle, Download } from 'lucide-react';
 import { RentEntry, Tenant } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 interface RentHistoryViewProps {
   tenants: Tenant[];
@@ -149,6 +150,47 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
     }
   };
 
+  const exportToExcel = () => {
+    const exportData = filteredEntries.map(entry => ({
+      'Tenant Name': getTenantName(entry.tenantId),
+      'Month': entry.month,
+      'Year': entry.year,
+      'Previous Reading': entry.previousReading,
+      'Current Reading': entry.currentReading,
+      'Electricity Usage': entry.currentReading - entry.previousReading,
+      'Additional Charges': entry.additionalCharges,
+      'Previous Balance': entry.previousBalance || 0,
+      'Advance Credit': entry.advanceCredit || 0,
+      'Total Rent': entry.totalRent,
+      'Amount Paid': entry.amountPaid || 0,
+      'Outstanding Balance': entry.balance || 0,
+      'Payment Status': entry.paymentStatus || 'unpaid',
+      'Payment Date': entry.paymentDate || '',
+      'Balance Paid Date': entry.balancePaidDate || '',
+      'Created Date': new Date(entry.createdAt).toLocaleDateString(),
+      'Payment Notes': entry.paymentNotes || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rent History');
+
+    // Auto-width columns
+    const maxWidth = exportData.reduce((w, r) => Math.max(w, Object.keys(r).length), 10);
+    worksheet['!cols'] = Array(maxWidth).fill({wch: 15});
+
+    const fileName = selectedTenantId === 'all' 
+      ? `rent-history-all-${new Date().toISOString().split('T')[0]}.xlsx`
+      : `rent-history-${getTenantName(selectedTenantId)}-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    XLSX.writeFile(workbook, fileName);
+
+    toast({
+      title: "Excel Export Complete",
+      description: `Exported ${filteredEntries.length} entries to ${fileName}`,
+    });
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="bg-card/95 backdrop-blur-lg border-border w-full max-w-7xl max-h-[90vh] overflow-hidden">
@@ -189,6 +231,17 @@ export const RentHistoryView = ({ tenants, onClose, onEditRentEntry }: RentHisto
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Latest Payment
+              </Button>
+            )}
+            
+            {filteredEntries.length > 0 && (
+              <Button
+                onClick={exportToExcel}
+                variant="outline"
+                className="border-success text-success hover:bg-success/10"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export to Excel
               </Button>
             )}
           </div>

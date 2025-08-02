@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   appName: 'Rent Calculator',
   webDir: 'dist',
   server: {
-    // Remove the server URL for offline mode
     cleartext: true
   },
   plugins: {

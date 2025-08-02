@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, List } from 'lucide-react';
+import { Plus, List, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTenantDialog } from '@/components/AddTenantDialog';
 import { TenantSelector } from '@/components/TenantSelector';
@@ -9,6 +9,7 @@ import { RentHistoryView } from '@/components/RentHistoryView';
 import { AgreementReminder } from '@/components/AgreementReminder';
 import { Tenant, RentEntry } from '@/types/tenant';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 const Index = () => {
   const { toast } = useToast();
@@ -111,6 +112,41 @@ const Index = () => {
     }
   };
 
+  const exportTenantsToExcel = () => {
+    if (tenants.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "Please add some tenants first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const exportData = tenants.map(tenant => ({
+      'Tenant Name': tenant.name,
+      'Monthly Rent': tenant.monthlyRent,
+      'Electricity Rate': tenant.electricityRate,
+      'Initial Electricity Reading': tenant.initialElectricityReading,
+      'Agreement Start Date': tenant.agreementStartDate || '',
+      'Agreement Duration (months)': tenant.agreementDuration || 11
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Tenants');
+
+    // Auto-width columns
+    worksheet['!cols'] = Array(6).fill({wch: 20});
+
+    const fileName = `tenants-list-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast({
+      title: "Excel Export Complete",
+      description: `Exported ${tenants.length} tenants to ${fileName}`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Watermark at the bottom */}
@@ -146,7 +182,7 @@ const Index = () => {
           />
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Button
               onClick={() => setShowAddTenant(true)}
               className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
@@ -162,6 +198,17 @@ const Index = () => {
               <List className="w-5 h-5 mr-2" />
               View All Entries
             </Button>
+
+            {tenants.length > 0 && (
+              <Button
+                onClick={exportTenantsToExcel}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                Export Tenants
+              </Button>
+            )}
           </div>
 
           {selectedTenant && (
